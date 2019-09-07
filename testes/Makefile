@@ -1,16 +1,14 @@
 CC=gcc
 SRC_FILES = $(wildcard *.c)
 TARGETS = ${SRC_FILES:.c= }
-CFLAGS = 
+CFLAGS =  -m32 -g
 LDFLAGS = 
 
-all: $(TARGETS)
-	echo $(TARGETS)
+all:
+	$(CC) $(CFLAGS) -I ../include/ -L ../lib/ test1.c ../lib/libcthread.a -lcthread -o test1
 
-$(TARGETS): $(SRC_FILES)
-
-%.c:
-	$(CC) $(CFLAGS) $@ -o $< $(LDFLAGS)
+run:
+	./test1
 
 clean:
 	rm -rf *.o $(TARGETS)

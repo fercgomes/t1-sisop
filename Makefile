@@ -17,7 +17,7 @@ BIN_DIR=./bin
 SRC_DIR=./src
 TEST_DIR=testes
 
-CFLAGS= -I include/
+CFLAGS= -I include/ -g -Wall -m32
 LDFLAGS= -L lib/
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
@@ -39,6 +39,7 @@ cthread: $(OBJECTS)
 # Compile tests
 tests:
 	$(MAKE) -C $(TEST_DIR)
+	cd testes && ./test1
 
 clean:
 	rm -rf $(TARGET) src/*.o $(LIB_DIR)/*.a $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
