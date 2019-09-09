@@ -10,6 +10,10 @@
 #include "lib.h"
 #include "schedule.h"
 
+/* Global queues */
+FILA2 thread_queue;
+static TCB_t main_thread;
+
 /* Library initialization */
 int cthread_init() {
 	printf("+ Initializing cthread...\n");
@@ -27,8 +31,6 @@ int cthread_init() {
 
 	CreateFila2(&thread_queue);
     AppendFila2(&thread_queue, &main_thread);
-
-    schedule();
 
     return 0;
 }

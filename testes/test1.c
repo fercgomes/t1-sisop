@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "../include/cthread.h"
 #include "ucontext.h"
+#include "../src/schedule.h"
 
 int cthread_init();
 void print_queue(PFILA2 queue);
@@ -18,6 +19,9 @@ int main() {
         ccreate(test_func, &a, 0);
         ccreate(test_func, &a, 0);
         ccreate(test_func, &a, 0);
+        print_queue(NULL);
+
+        schedule();
     }
     else {
         fprintf(stderr, "+ Error initializing cthread.\n");

@@ -3,8 +3,9 @@
 #include "../include/support.h"
 #include "../include/cdata.h"
 #include "../include/cthread.h"
+#include "../src/lib.h"
 
-extern PFILA2 thread_queue;
+extern FILA2 thread_queue;
 
 /* Utils */
 void print_queue(PFILA2 queue) {
