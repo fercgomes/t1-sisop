@@ -6,64 +6,9 @@
 #include "../include/cthread.h"
 #include "../include/cdata.h"
 #include <ucontext.h>
-
-#define TSTACKSIZE 64000
-
-/* Global queues */
-static FILA2 thread_queue;
-
-static TCB_t main_thread;
-
-/* TID generator */
-static int current_tid = 0;
-static inline int make_tid() {
-	return current_tid++;
-}
-
-/* Utils */
-void print_queue(PFILA2 queue) {
-	queue = &thread_queue;
-	PNODE2 it = queue->first;
-	while(it != NULL) {
-		TCB_t* tcb = (TCB_t*) it->node;
-		printf("Thread id = %d\n", tcb->tid);
-		printf("Thread prio = %d\n", tcb->prio);
-		switch(tcb->state) {
-			case PROCST_APTO:
-				printf("Thread is ready.\n");
-				break;
-			case PROCST_BLOQ:
-				printf("Thread is blocked.\n");
-				break;
-			case PROCST_EXEC:
-				printf("Thread is executing.\n");
-				break;
-			case PROCST_TERMINO:
-				printf("Thread is finished.\n");
-				break;
-			default:
-				printf("Invalid thread state.\n");
-				break;
-		}
-		printf("------\n");
-
-		it = it->next;
-	}
-}
-
-PNODE2* get_next_thread() {
-    TCB_t* tcb;
-
-    FirstFila2(&thread_queue);
-    /* check if queue is empty */
-    if(thread_queue.first != NULL)
-        do {
-            tcb = (TCB_t*) GetAtIteratorFila2(&thread_queue);
-            printf("popping thread %d\n", tcb->tid);
-        }
-        while(NextFila2(&thread_queue) == 0);
-    return 0;
-}
+#include "utils.h"
+#include "lib.h"
+#include "schedule.h"
 
 /* Library initialization */
 int cthread_init() {
@@ -80,17 +25,11 @@ int cthread_init() {
     main_thread.context.uc_stack.ss_flags = 0;
     //makecontext(&main_thread->context, (void*)start, 0);
 
-	int r = CreateFila2(&thread_queue);
+	CreateFila2(&thread_queue);
+    AppendFila2(&thread_queue, &main_thread);
 
-    return r;
+    return 0;
 }
-
-
-/* TODO: schedule */
-void schedule() {
-    
-}
-
 
 int ccreate (void* (*start)(void*), void *arg, int prio) {
 
