@@ -14,6 +14,8 @@
 FILA2 thread_queue;
 static TCB_t main_thread;
 
+static ucontext_t sched_queue;
+
 /* Library initialization */
 int cthread_init() {
 	printf("+ Initializing cthread...\n");
@@ -23,7 +25,7 @@ int cthread_init() {
     main_thread.prio = 0;
     
     getcontext(&main_thread.context);
-    main_thread.context.uc_link = 0;
+    main_thread.context.uc_link = &sched_queue;
     main_thread.context.uc_stack.ss_sp = malloc(TSTACKSIZE);
     main_thread.context.uc_stack.ss_size = TSTACKSIZE;
     main_thread.context.uc_stack.ss_flags = 0;
@@ -47,10 +49,9 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 		this_tcb->state = PROCST_APTO;
 		this_tcb->prio = 0;
         
-        int r = getcontext(&this_tcb->context);
+        getcontext(&this_tcb->context);
 
-        this_tcb->context.uc_link = 0; // When finished, should return to scheduler!
-
+        this_tcb->context.uc_link = &this_tcb->sched_context;
         this_tcb->context.uc_stack.ss_sp = malloc(TSTACKSIZE);
         this_tcb->context.uc_stack.ss_size = TSTACKSIZE;
         this_tcb->context.uc_stack.ss_flags = 0;

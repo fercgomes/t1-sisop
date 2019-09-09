@@ -40,10 +40,8 @@ static TCB_t* get_next_thread() {
 }
 
 /* Starts the execution of a new context(thread) */
-void dispatch(TCB_t* tcb, ucontext_t* sched_context) {
-    /* Set return context to scheduler */
-    tcb->context.uc_link = sched_context;
-    // TODO: anything else??
+void dispatch(TCB_t* tcb) {
+    tcb->state = PROCST_EXEC;
 
     /* Effectively transfer control to selected thread */
     setcontext(&tcb->context);
@@ -53,22 +51,27 @@ void dispatch(TCB_t* tcb, ucontext_t* sched_context) {
 void schedule() {
     TCB_t* next_thread;
     volatile int sched_ready = 1;
-    ucontext_t sched_context;
+    ucontext_t* sched_context;
 
     while(1) {
-        /* Save scheduler's context */
-        getcontext(&sched_context);
+        /* Selects the next thread to execute */
+        next_thread = get_next_thread();    
 
-        if(sched_ready) {
-            sched_ready = 0;
+        if(next_thread) {
+            /* Save current context */
+            sched_context = &next_thread->sched_context;
+            getcontext(sched_context);
 
-            next_thread = get_next_thread();    
-            if(next_thread != NULL) {
-                printf("Dispatching thread tid=%d\n", next_thread->tid);
-            
-                dispatch(next_thread, &sched_context);
+            if(sched_ready) {
+                sched_ready = 0;
+                dispatch(next_thread);
+            }
+            else {
+                /* Thread has finished */
+                next_thread->state = PROCST_TERMINO;
+                printf("Returning from thread tid=%d\n", next_thread->tid);
             }
         }
-        else printf("Returning from thread\n");
+        else return;
     }
 }

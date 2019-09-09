@@ -23,11 +23,8 @@ typedef struct s_TCB {
 	int		state;		// estado em que a thread se encontra (CONFORME DEFINES ANTERIORES)
 	int 		prio;		// Prioridade associada a thread
 	ucontext_t 	context;	// contexto de execu��o da thread (SP, PC, GPRs e recursos) 
-	
-	/* A PARTIR DESSE PONTO PODEM SER ACRESCENTADOS CAMPOS NECESS�RIOS AO DESENVOLVIMENTO DA BIBLIOTECA
-	*/
 
-
+    ucontext_t sched_context;
 	
 } TCB_t; 
 
