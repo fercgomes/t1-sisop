@@ -17,7 +17,7 @@ BIN_DIR=./bin
 SRC_DIR=./src
 TEST_DIR=testes
 
-CFLAGS= -I include/ -g -Wall -m32
+CFLAGS= -I include/ -g -Wall
 LDFLAGS= -L lib/
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)

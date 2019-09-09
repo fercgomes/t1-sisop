@@ -1,12 +1,18 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "../include/support.h"
 #include "../include/cthread.h"
 #include "../include/cdata.h"
+#include <ucontext.h>
+
+#define TSTACKSIZE 64000
 
 /* Global queues */
 static FILA2 thread_queue;
+
+static TCB_t main_thread;
 
 /* TID generator */
 static int current_tid = 0;
@@ -45,13 +51,51 @@ void print_queue(PFILA2 queue) {
 	}
 }
 
+PNODE2* get_next_thread() {
+    TCB_t* tcb;
+
+    FirstFila2(&thread_queue);
+    /* check if queue is empty */
+    if(thread_queue.first != NULL)
+        do {
+            tcb = (TCB_t*) GetAtIteratorFila2(&thread_queue);
+            printf("popping thread %d\n", tcb->tid);
+        }
+        while(NextFila2(&thread_queue) == 0);
+    return 0;
+}
+
 /* Library initialization */
 int cthread_init() {
 	printf("+ Initializing cthread...\n");
-	return CreateFila2(&thread_queue);
+
+    main_thread.tid = 0;
+    main_thread.state = PROCST_EXEC;
+    main_thread.prio = 0;
+    
+    getcontext(&main_thread.context);
+    main_thread.context.uc_link = 0;
+    main_thread.context.uc_stack.ss_sp = malloc(TSTACKSIZE);
+    main_thread.context.uc_stack.ss_size = TSTACKSIZE;
+    main_thread.context.uc_stack.ss_flags = 0;
+    //makecontext(&main_thread->context, (void*)start, 0);
+
+	int r = CreateFila2(&thread_queue);
+
+    return r;
 }
 
+
+/* TODO: schedule */
+void schedule() {
+    
+}
+
+
 int ccreate (void* (*start)(void*), void *arg, int prio) {
+
+    /* Cast function pointer, so it's compatible with what makecontext expects */
+    (void(*)(void*))start;
 
 	/* Generate a TCB */
 	TCB_t* this_tcb = malloc(sizeof(TCB_t));
@@ -59,7 +103,16 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 		this_tcb->tid = make_tid();
 		this_tcb->state = PROCST_APTO;
 		this_tcb->prio = 0;
-		// this_tcb->context = ????;
+        
+        int r = getcontext(&this_tcb->context);
+
+        this_tcb->context.uc_link = 0; // When finished, should return to scheduler!
+
+        this_tcb->context.uc_stack.ss_sp = malloc(TSTACKSIZE);
+        this_tcb->context.uc_stack.ss_size = TSTACKSIZE;
+        this_tcb->context.uc_stack.ss_flags = 0;
+
+        makecontext(&this_tcb->context, (void*)start, 0);
 
 		/* Insert it into ready queue */
 		AppendFila2(&thread_queue, this_tcb);
