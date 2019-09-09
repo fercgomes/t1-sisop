@@ -28,6 +28,8 @@ int cthread_init() {
 	CreateFila2(&thread_queue);
     AppendFila2(&thread_queue, &main_thread);
 
+    schedule();
+
     return 0;
 }
 

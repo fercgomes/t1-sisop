@@ -18,7 +18,6 @@ int main() {
         ccreate(test_func, &a, 0);
         ccreate(test_func, &a, 0);
         ccreate(test_func, &a, 0);
-        get_next_thread();
     }
     else {
         fprintf(stderr, "+ Error initializing cthread.\n");
