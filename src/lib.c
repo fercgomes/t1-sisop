@@ -9,14 +9,21 @@
 #include "lib.h"
 #include "schedule.h"
 
+/* Initialization macros */
+#define CHECK_INIT if(!initialized){init();initialized=1;}
+
 /* Global queues */
 FILA2 thread_queue;
-static TCB_t main_thread;
+
+/* Other globals */
+static TCB_t main_thread; // TODO: state queues
+static int initialized = 0;
+
 TCB_t* current_thread;
 ucontext_t sched_context;
 
 /* Library initialization */
-int cthread_init() {
+int init() {
 	printf("+ Initializing cthread...\n");
 
     main_thread.tid = 0;
@@ -24,22 +31,44 @@ int cthread_init() {
     main_thread.prio = 0;
     
     getcontext(&main_thread.context);
-    main_thread.context.uc_link = 0;
-    main_thread.context.uc_stack.ss_sp = malloc(TSTACKSIZE);
-    main_thread.context.uc_stack.ss_size = TSTACKSIZE;
-    main_thread.context.uc_stack.ss_flags = 0;
-    //makecontext(&main_thread->context, (void*)start, 0);
+
+    getcontext(&sched_context);
+    sched_context.uc_link = 0;
+    sched_context.uc_stack.ss_sp = malloc(TSTACKSIZE);
+    sched_context.uc_stack.ss_size = TSTACKSIZE;
+    sched_context.uc_stack.ss_flags = 0;
+    makecontext(&sched_context, (void*)schedule, 0);
+
+    current_thread = &main_thread;
 
 	CreateFila2(&thread_queue);
-    //AppendFila2(&thread_queue, &main_thread);
+    AppendFila2(&thread_queue, &main_thread);
 
     return 0;
 }
 
-int ccreate (void* (*start)(void*), void *arg, int prio) {
+void cleanup() {
+    TCB_t* tcb_it;
+    int r = FirstFila2(&thread_queue);
 
-    /* Cast function pointer, so it's compatible with what makecontext expects */
-    (void(*)(void*))start;
+    /* Free stack memory, and thread blocks */
+    printf("+ Cleaning up\n");
+    /* Check if queue is empty */
+    if(r == 0)
+        do {
+            /* Select a thread from queue */
+            tcb_it = (TCB_t*) GetAtIteratorFila2(&thread_queue);
+            free(tcb_it->context.uc_stack.ss_sp);
+            free(tcb_it);
+        }
+        while(NextFila2(&thread_queue) == 0);
+
+    /* Free scheduler stack */
+    free(sched_context.uc_stack.ss_sp);
+}
+
+int ccreate (void* (*start)(void*), void *arg, int prio) {
+    CHECK_INIT;
 
 	/* Generate a TCB */
 	TCB_t* this_tcb = malloc(sizeof(TCB_t));
@@ -69,6 +98,8 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 }
 
 int cyield(void) {
+    CHECK_INIT;
+
     int rescheduled = 0;
     printf("+ Thread %d is yielding.\n", current_thread->tid);
 
@@ -92,23 +123,28 @@ int cyield(void) {
 }
 
 int cjoin(int tid) {
+    CHECK_INIT;
 	return -1;
 }
 
 int csem_init(csem_t *sem, int count) {
+    CHECK_INIT;
 	return -1;
 }
 
 int cwait(csem_t *sem) {
+    CHECK_INIT;
 	return -1;
 }
 
 int csignal(csem_t *sem) {
+    CHECK_INIT;
 	return -1;
 }
 
 int cidentify (char *name, int size) {
-	strncpy (name, "Sergio Cechin - 2019/2 - Teste de compilacao.", size);
+    CHECK_INIT;
+	strncpy (name, "Autores: \nFernando Correa Gomes -> 00264317\nIron Prando -> xxxxxxxx\n Nicolau Alff -> xxxxxxxx", size);
 	return 0;
 }
 

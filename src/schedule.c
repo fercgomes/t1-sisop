@@ -10,14 +10,17 @@
 #include "../include/cdata.h"
 #include "lib.h"
 #include <ucontext.h>
+#include <limits.h>
 
 extern FILA2 thread_queue;
 extern TCB_t* current_thread;
 extern ucontext_t sched_context;
 
+void cleanup();
+
 static TCB_t* get_next_thread() {
     TCB_t *tcb_it, *prospect_tcb = NULL;
-    unsigned int current_prio, highest_prio = 999999999999999999; /* TODO: This constant could be safer */
+    unsigned int current_prio, highest_prio = UINT_MAX; /* TODO: This constant could be safer */
 
     int r = FirstFila2(&thread_queue);
 
@@ -59,23 +62,20 @@ void schedule() {
     while(1) {
         /* Selects the next thread to execute */
         next_thread = get_next_thread();    
-        if(next_thread)
-            printf("popping tid %d\n", next_thread->tid);
 
         if(next_thread) {
             /* Save current context */
-            //sched_context = &next_thread->sched_context;
             getcontext(&sched_context);
 
             if(sched_ready) {
-                printf("+ Dispatching thread tid=%d\n",next_thread->tid);
+                printf("+ [SCHEDULER] Dispatching thread tid=%d\n",next_thread->tid);
                 sched_ready = 0;
                 startTimer();
                 dispatch(next_thread);
             }
             else {
                 /* Thread has returned to scheduler */
-                printf("+ Returning from thread tid=%d\n", next_thread->tid);
+                printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
                 elapsed_time = stopTimer();
                 next_thread->prio += elapsed_time;
 
@@ -87,10 +87,18 @@ void schedule() {
                     /* Thread has finished */
                     next_thread->state = PROCST_TERMINO;
                 }
+                else if(next_thread->state == PROCST_BLOQ) {
+                    /* Thread was blocked */
+                }
 
                 sched_ready = 1;
             }
         }
-        else return;
+        else {
+            /* No more ready threads */ 
+            printf("+ [SCHEDULER] No more ready threads.\n");
+            cleanup();
+            return;
+        }
     }
 }
