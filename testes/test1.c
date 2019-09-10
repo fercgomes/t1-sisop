@@ -8,7 +8,11 @@ void print_queue(PFILA2 queue);
 void get_next_thread();
 
 void* test_func(void* args) {
-   printf("oi\n"); 
+   printf("test_func\n"); 
+}
+
+void* test_func2(void* args) {
+   printf("test_func2\n"); 
 }
 
 int main() {
@@ -17,11 +21,11 @@ int main() {
         int a = 4;
 
         ccreate(test_func, &a, 0);
-        ccreate(test_func, &a, 0);
-        ccreate(test_func, &a, 0);
+        ccreate(test_func2, &a, 0);
         print_queue(NULL);
 
         schedule();
+        print_queue(NULL);
     }
     else {
         fprintf(stderr, "+ Error initializing cthread.\n");

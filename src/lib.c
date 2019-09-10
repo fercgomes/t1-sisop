@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,8 +13,6 @@
 FILA2 thread_queue;
 static TCB_t main_thread;
 
-static ucontext_t sched_queue;
-
 /* Library initialization */
 int cthread_init() {
 	printf("+ Initializing cthread...\n");
@@ -25,14 +22,14 @@ int cthread_init() {
     main_thread.prio = 0;
     
     getcontext(&main_thread.context);
-    main_thread.context.uc_link = &sched_queue;
+    main_thread.context.uc_link = 0;
     main_thread.context.uc_stack.ss_sp = malloc(TSTACKSIZE);
     main_thread.context.uc_stack.ss_size = TSTACKSIZE;
     main_thread.context.uc_stack.ss_flags = 0;
     //makecontext(&main_thread->context, (void*)start, 0);
 
 	CreateFila2(&thread_queue);
-    AppendFila2(&thread_queue, &main_thread);
+    //AppendFila2(&thread_queue, &main_thread);
 
     return 0;
 }

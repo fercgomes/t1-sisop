@@ -64,12 +64,14 @@ void schedule() {
 
             if(sched_ready) {
                 sched_ready = 0;
+                printf("+ Dispatching thread tid=%d\n",next_thread->tid);
                 dispatch(next_thread);
             }
             else {
                 /* Thread has finished */
                 next_thread->state = PROCST_TERMINO;
-                printf("Returning from thread tid=%d\n", next_thread->tid);
+                sched_ready = 1;
+                printf("+ Returning from thread tid=%d\n", next_thread->tid);
             }
         }
         else return;
