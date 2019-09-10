@@ -12,6 +12,8 @@
 /* Global queues */
 FILA2 thread_queue;
 static TCB_t main_thread;
+TCB_t* current_thread;
+ucontext_t sched_context;
 
 /* Library initialization */
 int cthread_init() {
@@ -48,12 +50,12 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
         
         getcontext(&this_tcb->context);
 
-        this_tcb->context.uc_link = &this_tcb->sched_context;
+        this_tcb->context.uc_link = &sched_context;
         this_tcb->context.uc_stack.ss_sp = malloc(TSTACKSIZE);
         this_tcb->context.uc_stack.ss_size = TSTACKSIZE;
         this_tcb->context.uc_stack.ss_flags = 0;
 
-        makecontext(&this_tcb->context, (void*)start, 0);
+        makecontext(&this_tcb->context, (void*)start, 1, arg);
 
 		/* Insert it into ready queue */
 		AppendFila2(&thread_queue, this_tcb);
@@ -67,7 +69,26 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 }
 
 int cyield(void) {
-	return -1;
+    int rescheduled = 0;
+    printf("+ Thread %d is yielding.\n", current_thread->tid);
+
+    /* Save current context */
+    getcontext(&current_thread->context);
+
+    if(rescheduled) {
+        /* Thread will resume */
+        printf("+ Thread %d is resuming.\n", current_thread->tid);
+        current_thread->state = PROCST_EXEC;
+        rescheduled = 0;
+        return 0;
+    }
+    else {
+        /* Thread has yielded. It goes back to the scheduler */
+        printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
+        current_thread->state = PROCST_APTO;
+        rescheduled = 1;
+        setcontext(&sched_context);
+    }
 }
 
 int cjoin(int tid) {

@@ -7,12 +7,16 @@ int cthread_init();
 void print_queue(PFILA2 queue);
 void get_next_thread();
 
-void* test_func(void* args) {
-   printf("test_func\n"); 
+void* test_func(void *args) {
+    printf("test_func\n"); 
+    printf("args = %d\n", *(int*)args);
 }
 
-void* test_func2(void* args) {
-   printf("test_func2\n"); 
+void* test_func2(void *args) {
+    printf("test_func2\n"); 
+    printf("args = %d\n", *(int*)args);
+    cyield();
+    printf("back from yield tf2\n");
 }
 
 int main() {

@@ -24,7 +24,7 @@ typedef struct s_TCB {
 	int 		prio;		// Prioridade associada a thread
 	ucontext_t 	context;	// contexto de execu��o da thread (SP, PC, GPRs e recursos) 
 
-    ucontext_t sched_context;
+    //ucontext_t sched_context;
 	
 } TCB_t; 
 

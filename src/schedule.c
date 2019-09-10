@@ -12,10 +12,12 @@
 #include <ucontext.h>
 
 extern FILA2 thread_queue;
+extern TCB_t* current_thread;
+extern ucontext_t sched_context;
 
 static TCB_t* get_next_thread() {
     TCB_t *tcb_it, *prospect_tcb = NULL;
-    int current_prio, highest_prio = 0;
+    unsigned int current_prio, highest_prio = 999999999999999999; /* TODO: This constant could be safer */
 
     int r = FirstFila2(&thread_queue);
 
@@ -42,6 +44,7 @@ static TCB_t* get_next_thread() {
 /* Starts the execution of a new context(thread) */
 void dispatch(TCB_t* tcb) {
     tcb->state = PROCST_EXEC;
+    current_thread = tcb;
 
     /* Effectively transfer control to selected thread */
     setcontext(&tcb->context);
@@ -51,27 +54,41 @@ void dispatch(TCB_t* tcb) {
 void schedule() {
     TCB_t* next_thread;
     volatile int sched_ready = 1;
-    ucontext_t* sched_context;
+    unsigned int elapsed_time;
 
     while(1) {
         /* Selects the next thread to execute */
         next_thread = get_next_thread();    
+        if(next_thread)
+            printf("popping tid %d\n", next_thread->tid);
 
         if(next_thread) {
             /* Save current context */
-            sched_context = &next_thread->sched_context;
-            getcontext(sched_context);
+            //sched_context = &next_thread->sched_context;
+            getcontext(&sched_context);
 
             if(sched_ready) {
-                sched_ready = 0;
                 printf("+ Dispatching thread tid=%d\n",next_thread->tid);
+                sched_ready = 0;
+                startTimer();
                 dispatch(next_thread);
             }
             else {
-                /* Thread has finished */
-                next_thread->state = PROCST_TERMINO;
-                sched_ready = 1;
+                /* Thread has returned to scheduler */
                 printf("+ Returning from thread tid=%d\n", next_thread->tid);
+                elapsed_time = stopTimer();
+                next_thread->prio += elapsed_time;
+
+                /* Check state */
+                if(next_thread->state == PROCST_APTO) {
+                    /* Thread has yielded */
+                }
+                else if(next_thread->state == PROCST_EXEC) {
+                    /* Thread has finished */
+                    next_thread->state = PROCST_TERMINO;
+                }
+
+                sched_ready = 1;
             }
         }
         else return;
