@@ -129,7 +129,11 @@ int cjoin(int tid) {
 
 int csem_init(csem_t *sem, int count) {
     CHECK_INIT;
-	return -1;
+    if(count > 0) {
+        sem->count = count;
+        return CreateFila2(sem->fila);
+    }
+    else return -1;
 }
 
 int cwait(csem_t *sem) {
