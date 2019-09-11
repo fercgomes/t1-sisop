@@ -105,17 +105,18 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 int cyield(void) {
     CHECK_INIT;  // Checks if the lib has been initialized. If not, will initialize it
 
-    int rescheduled = 0;
     printf("+ Thread %d is yielding.\n", current_thread->tid);
-
 
     // Thread has yielded
     printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
     current_thread->state = PROCST_APTO;
     // Save current context
+    int i = 0;
     getcontext(&current_thread->context);
-    setcontext(&sched_context);
-
+    if (i == 0) {
+        i = 1;
+        setcontext(&sched_context);
+    } 
 
     // Thread resumes
     printf("+ Thread %d is resuming.\n", current_thread->tid);
