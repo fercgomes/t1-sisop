@@ -9,29 +9,33 @@
 #include "lib.h"
 #include "schedule.h"
 
-/* Initialization macros */
+// Check initialized lib state macro
 #define CHECK_INIT if(!initialized){init();initialized=1;}
 
-/* Global queues */
+//  Global queues
 FILA2 thread_queue;
+// TODO: state queues
 
-/* Other globals */
-static TCB_t main_thread; // TODO: state queues
+// Guarantees initialization at the first call of the lib
 static int initialized = 0;
 
+//  Thread control globals
+static TCB_t main_thread;
 TCB_t* current_thread;
 ucontext_t sched_context;
 
-/* Library initialization */
+//  Library initialization
 int init() {
 	printf("+ Initializing cthread...\n");
 
+    // Populate main thread TCB
     main_thread.tid = 0;
     main_thread.state = PROCST_EXEC;
     main_thread.prio = 0;
     
     getcontext(&main_thread.context);
 
+    // Creates a new context to begin execution at function schedule()
     getcontext(&sched_context);
     sched_context.uc_link = 0;
     sched_context.uc_stack.ss_sp = malloc(TSTACKSIZE);
@@ -39,6 +43,7 @@ int init() {
     sched_context.uc_stack.ss_flags = 0;
     makecontext(&sched_context, (void*)schedule, 0);
 
+    // Sets the main thread and initialize the queue
     current_thread = &main_thread;
 
 	CreateFila2(&thread_queue);
@@ -68,22 +73,22 @@ void cleanup() {
 }
 
 int ccreate (void* (*start)(void*), void *arg, int prio) {
-    CHECK_INIT;
+    CHECK_INIT;  // Checks if the lib has been initialized. If not, will initialize it
 
-	/* Generate a TCB */
+	/* Tries to generate a TCB */
 	TCB_t* this_tcb = malloc(sizeof(TCB_t));
 	if(this_tcb != NULL) {
+        // Create the new therad
 		this_tcb->tid = make_tid();
 		this_tcb->state = PROCST_APTO;
 		this_tcb->prio = 0;
         
+        // Copy actual context and make the new one
         getcontext(&this_tcb->context);
-
         this_tcb->context.uc_link = &sched_context;
         this_tcb->context.uc_stack.ss_sp = malloc(TSTACKSIZE);
         this_tcb->context.uc_stack.ss_size = TSTACKSIZE;
         this_tcb->context.uc_stack.ss_flags = 0;
-
         makecontext(&this_tcb->context, (void*)start, 1, arg);
 
 		/* Insert it into ready queue */
@@ -93,33 +98,30 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 	}
 	else {
 		fprintf(stderr, "Error allocating memory.\n");
-		return -1;
+		return -9;
 	}
 }
 
 int cyield(void) {
-    CHECK_INIT;
+    CHECK_INIT;  // Checks if the lib has been initialized. If not, will initialize it
 
     int rescheduled = 0;
     printf("+ Thread %d is yielding.\n", current_thread->tid);
 
-    /* Save current context */
-    getcontext(&current_thread->context);
 
-    if(rescheduled) {
-        /* Thread will resume */
-        printf("+ Thread %d is resuming.\n", current_thread->tid);
-        current_thread->state = PROCST_EXEC;
-        rescheduled = 0;
-        return 0;
-    }
-    else {
-        /* Thread has yielded. It goes back to the scheduler */
-        printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
-        current_thread->state = PROCST_APTO;
-        rescheduled = 1;
-        setcontext(&sched_context);
-    }
+    // Thread has yielded
+    printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
+    current_thread->state = PROCST_APTO;
+    // Save current context
+    getcontext(&current_thread->context);
+    setcontext(&sched_context);
+
+
+    // Thread resumes
+    printf("+ Thread %d is resuming.\n", current_thread->tid);
+    current_thread->state = PROCST_EXEC;
+
+    return 0;
 }
 
 int cjoin(int tid) {
