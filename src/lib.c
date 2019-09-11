@@ -111,10 +111,10 @@ int cyield(void) {
     printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
     current_thread->state = PROCST_APTO;
     // Save current context
-    int i = 0;
+    int yielding = TRUE;
     getcontext(&current_thread->context);
-    if (i == 0) {
-        i = 1;
+    if (yielding == TRUE) {
+        yielding = FALSE;
         setcontext(&sched_context);
     } 
 
