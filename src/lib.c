@@ -260,8 +260,23 @@ int csignal(csem_t *sem) {
 						highest_prio = current_prio;
 				}
 			} while(NextFila2(sem->fila) == 0);
-			DeleteAtIteratorFila2(sem->fila);
-			prospect_tcb->state = PROCST_APTO;
+			
+			r = FirstFila2(sem->fila);
+			if (r != 0) {
+				fprintf(stderr, "Error signaling resource release. Couldn't retrieve process from queue at csignal.\n");
+				return -9;
+			}
+
+			do {
+            /* Select a thread from queue */
+				tcb_it = (TCB_t*) GetAtIteratorFila2(sem->fila);
+				if (tcb_it->tid == prospect_tcb->tid) {
+					DeleteAtIteratorFila2(sem->fila);
+					prospect_tcb->state = PROCST_APTO;
+					return 0;
+				}
+			} while(NextFila2(sem->fila) == 0);
+			
 		}
 	} else {
 		fprintf(stderr, "Error signaling resource release. Invalid semaphor at csignal.\n");
