@@ -255,11 +255,10 @@ int csignal(csem_t *sem) {
 				current_prio = tcb_it->prio;
 
 				/* Check for priority. Maintain first highest priority found */
-				if(tcb_it->state == PROCST_APTO)
-					if(current_prio < highest_prio) {
+				if(current_prio < highest_prio) {
 						prospect_tcb = tcb_it;
 						highest_prio = current_prio;
-					}
+				}
 			} while(NextFila2(sem->fila) == 0);
 			DeleteAtIteratorFila2(sem->fila);
 			prospect_tcb->state = PROCST_APTO;
