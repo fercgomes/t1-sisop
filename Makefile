@@ -39,7 +39,6 @@ cthread: $(OBJECTS)
 # Compile tests
 tests:
 	$(MAKE) -C $(TEST_DIR)
-	cd testes && ./test1
 
 clean:
 	rm -rf $(TARGET) src/*.o $(LIB_DIR)/*.a $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
