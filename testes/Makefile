@@ -5,10 +5,10 @@ CFLAGS =  -m32 -g
 LDFLAGS = 
 
 all:
-	$(CC) $(CFLAGS) -I ../include/ -L ../lib/ test1.c ../lib/libcthread.a -lcthread -o test1
+	$(CC) $(CFLAGS) -I ../include/ -L ../lib/ create_test.c ../lib/libcthread.a -lcthread -o create_test
 
 run:
-	./test1
+	./create_test
 
 clean:
 	rm -rf *.o $(TARGETS)

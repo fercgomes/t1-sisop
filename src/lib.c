@@ -29,12 +29,15 @@ ucontext_t sched_context;
 
 //  Library initialization
 int init() {
+	if (initialized)
+		return;
+		
 	printf("+ Initializing cthread...\n");
 
     // Populate main thread TCB
     main_thread.tid = 0;
     main_thread.state = PROCST_EXEC;
-    main_thread.prio = 0;
+    main_thread.prio = 1;
     
     getcontext(&main_thread.context);
 

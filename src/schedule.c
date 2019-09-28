@@ -95,7 +95,7 @@ void schedule() {
                     
                     // Check if the tid is being waited by another thread
                     JOIN_TUPLE* tuple = NULL;
-					int r = FirstFila2(g_joinings);
+					int r = FirstFila2(&g_joinings);
 					int found = FALSE;
 
 					if (r == 0) {
