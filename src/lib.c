@@ -11,7 +11,7 @@
 #include <limits.h>
 
 // Check initialized lib state macro
-#define CHECK_INIT if(!initialized){init();initialized=1;}
+#define CHECK_INIT if(!initialized){init();}
 #define TRUE 1
 #define FALSE 0
 
@@ -28,7 +28,7 @@ TCB_t* current_thread;
 ucontext_t sched_context;
 
 //  Library initialization
-int init() {
+void init() {
 	if (initialized)
 		return;
 		
@@ -36,28 +36,33 @@ int init() {
 
     // Populate main thread TCB
     main_thread.tid = 0;
-    main_thread.state = PROCST_EXEC;
-    main_thread.prio = 1;
+    main_thread.state = PROCST_APTO;
+    main_thread.prio = 0;
     
     getcontext(&main_thread.context);
+    if (!initialized) 
+    {
+		// Creates a new context to begin execution at function schedule()
+		getcontext(&sched_context);
+		sched_context.uc_link = 0;
+		sched_context.uc_stack.ss_sp = malloc(TSTACKSIZE);
+		sched_context.uc_stack.ss_size = TSTACKSIZE;
+		sched_context.uc_stack.ss_flags = 0;
+		makecontext(&sched_context, (void*)schedule, 0);
 
-    // Creates a new context to begin execution at function schedule()
-    getcontext(&sched_context);
-    sched_context.uc_link = 0;
-    sched_context.uc_stack.ss_sp = malloc(TSTACKSIZE);
-    sched_context.uc_stack.ss_size = TSTACKSIZE;
-    sched_context.uc_stack.ss_flags = 0;
-    makecontext(&sched_context, (void*)schedule, 0);
+		// Sets the main thread and initialize the queue
+		current_thread = &main_thread;
 
-    // Sets the main thread and initialize the queue
-    current_thread = &main_thread;
+		CreateFila2(&thread_queue);
+		AppendFila2(&thread_queue, &main_thread);
+		
+		CreateFila2(&g_joinings);
+		
+		initialized=1;
+		setcontext(&sched_context);
+	}
 
-	CreateFila2(&thread_queue);
-    AppendFila2(&thread_queue, &main_thread);
-    
-    CreateFila2(&g_joinings);
-
-    return 0;
+    return;
 }
 
 void cleanup() {

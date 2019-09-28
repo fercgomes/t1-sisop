@@ -3,7 +3,7 @@
 #include "../include/cthread.h"
 
 #define LIMIT 100
-#define DATA_SIZE 10
+#define DATA_SIZE 15
 
 FILE* fp1 = NULL;
 FILE* fp_ground_truth = NULL; 
@@ -12,7 +12,7 @@ void* create_test(void* i)
 {
 	int j = *((int*) i);
 	char data[DATA_SIZE];
-	snprintf(data,DATA_SIZE,"c%d\n", j);
+	snprintf(data,DATA_SIZE,"t%d\n", j);
 	fputs(data, fp1);
 	if (ferror(fp1)) {
 		printf("Unexpected error occurred while writing on file. Exiting with error\n");
@@ -20,8 +20,9 @@ void* create_test(void* i)
 }
 
 int main() {
-    int i = 0;
+    int i = 1;
     int values[LIMIT] = {0};
+    char data_main[] = "t0\n";
     
     fp1 = fopen("data/create_test_data.txt", "w+");
     fp_ground_truth = fopen("data/groud_truth_create_test.txt", "r");
@@ -32,9 +33,13 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 	
-	for (i = 0; i < LIMIT; i++)
+	fputs(data_main, fp1);
+	if (ferror(fp1)) {
+		printf("Unexpected error occurred while writing on file. Exiting with error\n");
+	}
+	
+	for (i = 1; i < LIMIT; i++)
 	{
-		printf("%d\n",i);
 		values[i] = i;
 		int tcb = ccreate(create_test, &(values[i]), 0);
 		if (tcb < 0)
@@ -43,10 +48,22 @@ int main() {
 	
     cyield();
 	
+	fputs(data_main, fp1);
+	if (ferror(fp1)) {
+		printf("Unexpected error occurred while writing on file. Exiting with error\n");
+	}
+	
+	rewind(fp1);
 	int error = compareFiles(fp1, fp_ground_truth);
 	
 	fclose(fp1);
 	fclose(fp_ground_truth);
 	
+	if (error)
+	{
+		printf("Create Test Failed\n");
+	} else {
+		printf("Create Test Succeeded\n");
+	}
     return error;
 }

@@ -65,7 +65,7 @@ void schedule() {
     TCB_t* next_thread;
     volatile int sched_ready = 1;
     unsigned int elapsed_time;
-
+	
     while(1) {
         /* Selects the next thread to execute */
         next_thread = get_next_thread();    
