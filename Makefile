@@ -27,6 +27,8 @@ HEADERS = $(wildcard include/*.h)
 TARGET = $(LIB_DIR)/libcthread.a
 MOODLE_NAME = entrega.tar.gz
 
+.PHONY: all cthread tests
+
 all: cthread tests
 
 cthread: $(OBJECTS)
