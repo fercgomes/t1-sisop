@@ -16,6 +16,7 @@ void* create_test(void* i)
 	fputs(data, fp1);
 	if (ferror(fp1)) {
 		printf("Unexpected error occurred while writing on file. Exiting with error\n");
+		exit(-9);
 	}
 }
 
@@ -36,6 +37,7 @@ int main() {
 	fputs(data_main, fp1);
 	if (ferror(fp1)) {
 		printf("Unexpected error occurred while writing on file. Exiting with error\n");
+		exit(-9);
 	}
 	
 	for (i = 1; i < LIMIT; i++)
@@ -51,6 +53,7 @@ int main() {
 	fputs(data_main, fp1);
 	if (ferror(fp1)) {
 		printf("Unexpected error occurred while writing on file. Exiting with error\n");
+		exit(-9);
 	}
 	
 	rewind(fp1);

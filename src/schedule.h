@@ -6,7 +6,7 @@
 
 void schedule();
 
-static FILA2 g_joinings;
+FILA2 g_joinings;
 typedef struct s_join_tuple {
 	TCB_t* requirer;
 	int tid_required;

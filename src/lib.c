@@ -40,6 +40,7 @@ void init() {
     main_thread.prio = 0;
     
     getcontext(&main_thread.context);
+    
     if (!initialized) 
     {
 		// Creates a new context to begin execution at function schedule()
@@ -56,12 +57,11 @@ void init() {
 		CreateFila2(&thread_queue);
 		AppendFila2(&thread_queue, &main_thread);
 		
-		CreateFila2(&g_joinings);
-		
+		int error = CreateFila2(&g_joinings);
+
 		initialized=1;
 		setcontext(&sched_context);
 	}
-
     return;
 }
 
@@ -149,6 +149,9 @@ int cyield(void) {
 
 int cjoin(int tid) {
     CHECK_INIT;
+    if (current_thread->tid == tid)
+		return -9;
+		
     JOIN_TUPLE* tuple = NULL; // Structure defined at schedule.h
     int r = FirstFila2(&g_joinings);
     
@@ -161,7 +164,7 @@ int cjoin(int tid) {
                 
         } while(NextFila2(&g_joinings) == 0);
 	}
-	
+		
 	TCB_t *tcb_it = NULL;;
 	r = FirstFila2(&thread_queue);
 	int found = FALSE;
@@ -170,7 +173,7 @@ int cjoin(int tid) {
 		do {
 			tcb_it = (TCB_t*) GetAtIteratorFila2(&thread_queue);
 			if (tcb_it->tid == tid) {
-				if (tcb_it->state != PROCST_TERMINO)
+				if (tcb_it->state == PROCST_TERMINO)
 					return -9;
 					
 				found = TRUE;
@@ -181,7 +184,8 @@ int cjoin(int tid) {
 					int blocking = TRUE;
 					getcontext(&current_thread->context);
 					if (blocking) {
-						if (AppendFila2(&g_joinings, tuple) != 0) {
+						int error = AppendFila2(&g_joinings, (void*)tuple);
+						if (error != 0) {
 							fprintf(stderr, "Error joining threads. Couldn't append JOIN_TUPLE to g_joining at cjoin.\n");
 							free(tuple);
 							return -9;
@@ -190,6 +194,8 @@ int cjoin(int tid) {
 						current_thread->state = PROCST_BLOQ;
 						setcontext(&sched_context);
 					}
+					free(tuple);
+					return 0;
 					// if dispatcher is correct there's no need for current_thread->state = PROCST_EXEC;
 				} else {
 					fprintf(stderr, "Error joining threads. Couldn't allocate memory for JOIN_TUPLE at cjoin.\n");
@@ -208,7 +214,9 @@ int csem_init(csem_t *sem, int count) {
     CHECK_INIT;
     if (sem && count > 0) {
 		sem->count = count;
-		if (CreateFila2(sem->fila) != 0) {
+		sem->fila = malloc(sizeof(FILA2));
+		int error = CreateFila2(sem->fila);
+		if (error != 0) {
 			fprintf(stderr, "Error creating semaphor. Couldn't create queue at csem_init.\n");
 			return -9;
 		}

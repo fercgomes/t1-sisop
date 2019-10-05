@@ -45,8 +45,7 @@ static TCB_t* get_next_thread() {
             } else if (tcb_it->state == PROCST_EXEC || tcb_it->state == PROCST_BLOQ) {
 				g_finished = FALSE;
 			}
-        }
-        while(NextFila2(&thread_queue) == 0);
+        } while(NextFila2(&thread_queue) == 0);
 
     return prospect_tcb;
 }
@@ -104,8 +103,10 @@ void schedule() {
 							if(tuple->tid_required == next_thread->tid) {
 								tuple->requirer->state = PROCST_APTO;
 								found = TRUE;
+								DeleteAtIteratorFila2(&g_joinings);								
 							}
 						} while(NextFila2(&g_joinings) == 0 && found == FALSE);
+					} else {
 					}
                 }
                 else if(next_thread->state == PROCST_BLOQ) {
