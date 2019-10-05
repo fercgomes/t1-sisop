@@ -103,7 +103,7 @@ void schedule() {
 							if(tuple->tid_required == next_thread->tid) {
 								tuple->requirer->state = PROCST_APTO;
 								found = TRUE;
-								DeleteAtIteratorFila2(&g_joinings);								
+								DeleteAtIteratorFila2(&g_joinings);						
 							}
 						} while(NextFila2(&g_joinings) == 0 && found == FALSE);
 					} else {
