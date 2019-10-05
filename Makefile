@@ -17,7 +17,7 @@ BIN_DIR=./bin
 SRC_DIR=./src
 TEST_DIR=testes
 
-CFLAGS= -I include/ -g -Wall
+CFLAGS= -I include/ -g -Wall -Wno-return-type -D_REENTRANT
 LDFLAGS= -L lib/
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)

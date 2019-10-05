@@ -2,3 +2,4 @@ src/*.o
 *~
 lib/*.a
 *swp
+*swo

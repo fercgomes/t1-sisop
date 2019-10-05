@@ -7,7 +7,19 @@
 
 extern FILA2 thread_queue;
 
-/* Utils */
+TCB_t* thread_lookup(unsigned int tid) {
+    TCB_t* tcb_it = NULL;
+    int r = FirstFila2(&thread_queue);
+
+    do {
+        tcb_it = (TCB_t*) GetAtIteratorFila2(&thread_queue);
+
+        if(tcb_it->tid == tid)
+            return tcb_it;
+    }
+    while(NextFila2(&thread_queue) == 0);
+}
+
 void print_queue(PFILA2 queue) {
 	queue = &thread_queue;
 	PNODE2 it = queue->first;
