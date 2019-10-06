@@ -76,8 +76,8 @@ int main() {
 		exit(-9);
 	}
     
-    fp1 = fopen("data/semaphore_test_data.txt", "w+");
-    fp_ground_truth = fopen("data/groud_truth_semaphore_test.txt", "r");
+    fp1 = fopen("generated_data/semaphore_test_data.txt", "w+");
+    fp_ground_truth = fopen("ground_truth/groud_truth_semaphore_test.txt", "r");
     
 	if (!fp1 || !fp_ground_truth) 
 	{

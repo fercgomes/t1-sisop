@@ -32,7 +32,7 @@ void init() {
 	if (initialized)
 		return;
 		
-	printf("+ Initializing cthread...\n");
+	//printf("+ Initializing cthread...\n");
 
     // Populate main thread TCB
     main_thread.tid = 0;
@@ -57,7 +57,7 @@ void init() {
 		CreateFila2(&thread_queue);
 		AppendFila2(&thread_queue, &main_thread);
 		
-		int error = CreateFila2(&g_joinings);
+		CreateFila2(&g_joinings);
 
 		initialized=1;
 		setcontext(&sched_context);
@@ -127,10 +127,10 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
 int cyield(void) {
     CHECK_INIT;  // Checks if the lib has been initialized. If not, will initialize it
 
-    printf("+ Thread %d is yielding.\n", current_thread->tid);
+    //printf("+ Thread %d is yielding.\n", current_thread->tid);
 
     // Thread has yielded
-    printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
+    //printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
     current_thread->state = PROCST_APTO;
     // Save current context
     int yielding = TRUE;
@@ -141,7 +141,7 @@ int cyield(void) {
     } 
 
     // Thread resumes
-    printf("+ Thread %d is resuming.\n", current_thread->tid);
+    //printf("+ Thread %d is resuming.\n", current_thread->tid);
     current_thread->state = PROCST_EXEC;
 
     return 0;
@@ -303,7 +303,7 @@ int csignal(csem_t *sem) {
 
 int cidentify (char *name, int size) {
     CHECK_INIT;
-	strncpy (name, "Autores: \nFernando Correa Gomes -> 00264317\nIron Prando -> 00231590\n Nicolau Alff -> xxxxxxxx", size);
+	strncpy (name, "Autores: \nFernando Correa Gomes -> 00264317\nIron Prando -> 00231590\n Nicolau Alff -> 00243667\n", size);
 	return 0;
 }
 

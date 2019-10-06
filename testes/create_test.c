@@ -25,8 +25,8 @@ int main() {
     int values[LIMIT] = {0};
     char data_main[] = "t0\n";
     
-    fp1 = fopen("data/create_test_data.txt", "w+");
-    fp_ground_truth = fopen("data/groud_truth_create_test.txt", "r");
+    fp1 = fopen("generated_data/create_test_data.txt", "w+");
+    fp_ground_truth = fopen("ground_truth/groud_truth_create_test.txt", "r");
     
 	if (!fp1 || !fp_ground_truth) 
 	{

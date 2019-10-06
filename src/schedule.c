@@ -74,13 +74,13 @@ void schedule() {
             getcontext(&sched_context);
 
             if(sched_ready) {
-                printf("+ [SCHEDULER] Dispatching thread tid=%d\n",next_thread->tid);
+                //printf("+ [SCHEDULER] Dispatching thread tid=%d\n",next_thread->tid);
                 sched_ready = 0;
                 startTimer();
                 dispatch(next_thread);
             } else {
                 /* Thread has returned to scheduler */
-                printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
+                //printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
                 elapsed_time = stopTimer();
                 next_thread->prio = elapsed_time;
 
@@ -117,7 +117,7 @@ void schedule() {
             }
         } else if (g_finished) {
             /* No more threads to execute */ 
-            printf("+ [SCHEDULER] No more ready threads.\n");
+            //printf("+ [SCHEDULER] No more ready threads.\n");
             cleanup();
             return;
         }

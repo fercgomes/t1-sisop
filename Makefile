@@ -27,9 +27,9 @@ HEADERS = $(wildcard include/*.h)
 TARGET = $(LIB_DIR)/libcthread.a
 MOODLE_NAME = entrega.tar.gz
 
-.PHONY: all cthread tests
+.PHONY: all cthread tests pack
 
-all: cthread tests
+all: cthread
 
 cthread: $(OBJECTS)
 	ar crs $(TARGET) $(OBJECTS) $(BIN_DIR)/support.o	
@@ -48,5 +48,3 @@ clean:
 pack:
 	@echo "Preparando para entrega..."
 	tar -zcvf $(MOODLE_NAME) bin/ exemplos/ include/ lib/ src/ testes/ Makefile
-
-.PHONY = all clean pack
