@@ -40,7 +40,6 @@ void* semaphor_test(void* sem_test)
 		printf("Unexpected error occurred while writing on file. Exiting with error\n");
 		exit(-9);
 	}
-	
 	cwait(j.sem);
 	
 	snprintf(data,DATA_SIZE,"it\n", j.i);
@@ -100,7 +99,7 @@ int main() {
 			printf("Error creating TCB\n");
 	}
 	
-	delay(LIMIT*10);
+	delay(LIMIT*100);
 		
     cyield();
 	

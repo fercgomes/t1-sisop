@@ -16,7 +16,9 @@
 #define FALSE 0
 
 //  Global queues
-FILA2 thread_queue;
+FILA2 finished_queue;
+FILA2 ready_queue;
+FILA2 blocked_queue;
 // TODO: state queues
 
 // Guarantees initialization at the first call of the lib
@@ -54,8 +56,11 @@ void init() {
 		// Sets the main thread and initialize the queue
 		current_thread = &main_thread;
 
-		CreateFila2(&thread_queue);
-		AppendFila2(&thread_queue, &main_thread);
+		CreateFila2(&ready_queue);
+		AppendFila2(&ready_queue, (void*)&main_thread);
+		
+		CreateFila2(&blocked_queue);
+		CreateFila2(&finished_queue);
 		
 		CreateFila2(&g_joinings);
 
@@ -68,19 +73,33 @@ void init() {
 void cleanup() {
     TCB_t* tcb_it;
     JOIN_TUPLE* tuple;
-    int r = FirstFila2(&thread_queue);
+    int r = FirstFila2(&ready_queue);
 
     /* Free stack memory, and thread blocks */
-    printf("+ Cleaning up\n");
+    //printf("+ Cleaning up\n");
     /* Check if queue is empty */
     if(r == 0)
         do {
             /* Select a thread from queue */
-            tcb_it = (TCB_t*) GetAtIteratorFila2(&thread_queue);
+            tcb_it = (TCB_t*) GetAtIteratorFila2(&ready_queue);
             free(tcb_it->context.uc_stack.ss_sp);
             free(tcb_it);
-        } while(NextFila2(&thread_queue) == 0);
+        } while(NextFila2(&ready_queue) == 0);
 
+	r = FirstFila2(&blocked_queue);
+	if(r == 0)
+        do {
+            tcb_it = (TCB_t*) GetAtIteratorFila2(&blocked_queue);
+            free(tcb_it);
+        } while(NextFila2(&blocked_queue) == 0);
+        
+    r = FirstFila2(&finished_queue);
+	if(r == 0)
+        do {
+            tcb_it = (TCB_t*) GetAtIteratorFila2(&finished_queue);
+            free(tcb_it);
+        } while(NextFila2(&finished_queue) == 0);
+	
     /* Free scheduler stack */
     free(sched_context.uc_stack.ss_sp);
     
@@ -90,7 +109,7 @@ void cleanup() {
         do {
             tuple = (JOIN_TUPLE*) GetAtIteratorFila2(&g_joinings);
             free(tuple);
-        } while(NextFila2(&thread_queue) == 0);
+        } while(NextFila2(&g_joinings) == 0);
         
 }
 
@@ -114,7 +133,7 @@ int ccreate (void* (*start)(void*), void *arg, int prio) {
         makecontext(&this_tcb->context, (void*)start, 1, arg);
 
 		/* Insert it into ready queue */
-		AppendFila2(&thread_queue, this_tcb);
+		AppendFila2(&ready_queue, (void*)this_tcb);
 
 		return this_tcb->tid;
 	}
@@ -132,6 +151,8 @@ int cyield(void) {
     // Thread has yielded
     //printf("+ Thread %d is going back to scheduler.\n", current_thread->tid);
     current_thread->state = PROCST_APTO;
+    AppendFila2(&ready_queue, (void*)current_thread);
+     
     // Save current context
     int yielding = TRUE;
     getcontext(&current_thread->context);
@@ -142,7 +163,7 @@ int cyield(void) {
 
     // Thread resumes
     //printf("+ Thread %d is resuming.\n", current_thread->tid);
-    current_thread->state = PROCST_EXEC;
+    //current_thread->state = PROCST_EXEC;
 
     return 0;
 }
@@ -166,16 +187,13 @@ int cjoin(int tid) {
 	}
 		
 	TCB_t *tcb_it = NULL;;
-	r = FirstFila2(&thread_queue);
+	r = FirstFila2(&ready_queue);
 	int found = FALSE;
 	
 	if (r == 0) {
 		do {
-			tcb_it = (TCB_t*) GetAtIteratorFila2(&thread_queue);
+			tcb_it = (TCB_t*) GetAtIteratorFila2(&ready_queue);
 			if (tcb_it->tid == tid) {
-				if (tcb_it->state == PROCST_TERMINO)
-					return -9;
-					
 				found = TRUE;
 				tuple = malloc(sizeof(JOIN_TUPLE));
 				if (tuple) {
@@ -192,6 +210,8 @@ int cjoin(int tid) {
 						}
 						blocking = FALSE;
 						current_thread->state = PROCST_BLOQ;
+						AppendFila2(&blocked_queue, (void*)current_thread);
+						
 						setcontext(&sched_context);
 					}
 					free(tuple);
@@ -203,7 +223,46 @@ int cjoin(int tid) {
 				}
 					
 			}
-		} while(NextFila2(&thread_queue) == 0 && found == FALSE);
+		} while(NextFila2(&ready_queue) == 0 && found == FALSE);
+	}
+	
+	r = FirstFila2(&blocked_queue);
+	
+	if (r == 0) {
+		do {
+			tcb_it = (TCB_t*) GetAtIteratorFila2(&blocked_queue);
+			if (tcb_it->tid == tid) {
+			
+				found = TRUE;
+				tuple = malloc(sizeof(JOIN_TUPLE));
+				if (tuple) {
+					tuple->requirer = current_thread;
+					tuple->tid_required = tid;
+					int blocking = TRUE;
+					getcontext(&current_thread->context);
+					if (blocking) {
+						int error = AppendFila2(&g_joinings, (void*)tuple);
+						if (error != 0) {
+							fprintf(stderr, "Error joining threads. Couldn't append JOIN_TUPLE to g_joining at cjoin.\n");
+							free(tuple);
+							return -9;
+						}
+						blocking = FALSE;
+						current_thread->state = PROCST_BLOQ;
+						AppendFila2(&blocked_queue, (void*)current_thread);
+						
+						setcontext(&sched_context);
+					}
+					free(tuple);
+					return 0;
+					// if dispatcher is correct there's no need for current_thread->state = PROCST_EXEC;
+				} else {
+					fprintf(stderr, "Error joining threads. Couldn't allocate memory for JOIN_TUPLE at cjoin.\n");
+					return -9;
+				}
+					
+			}
+		} while(NextFila2(&blocked_queue) == 0 && found == FALSE);
 	}
 	
 	// No thread with the given tid
@@ -236,14 +295,15 @@ int cwait(csem_t *sem) {
 			getcontext(&current_thread->context);
 			if (blocking) {
 				current_thread->state = PROCST_BLOQ;
-				if (AppendFila2(sem->fila, current_thread) != 0) {
+				AppendFila2(&blocked_queue, (void*)current_thread);
+				if (AppendFila2(sem->fila, (void*)current_thread) != 0) {
 					fprintf(stderr, "Error requesting resource. Couldn't append process to queue at cwait.\n");
 					return -9;
 				}
 				blocking = FALSE;
 				setcontext(&sched_context);
 			} else {
-				current_thread->state = PROCST_EXEC;
+				//current_thread->state = PROCST_EXEC;
 			}
 		}
 	} else {
@@ -289,6 +349,7 @@ int csignal(csem_t *sem) {
 				if (tcb_it->tid == prospect_tcb->tid) {
 					DeleteAtIteratorFila2(sem->fila);
 					prospect_tcb->state = PROCST_APTO;
+					switch_queue(prospect_tcb, &blocked_queue, &ready_queue);
 					return 0;
 				}
 			} while(NextFila2(sem->fila) == 0);

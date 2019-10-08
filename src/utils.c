@@ -5,25 +5,23 @@
 #include "../include/cthread.h"
 #include "../src/lib.h"
 
-extern FILA2 thread_queue;
 
-TCB_t* thread_lookup(unsigned int tid) {
+TCB_t* thread_lookup(unsigned int tid, PFILA2 queue) {
     TCB_t* tcb_it = NULL;
-    int r = FirstFila2(&thread_queue);
+    int r = FirstFila2(queue);
 
 	if (r == 0) {
 		do {
-			tcb_it = (TCB_t*) GetAtIteratorFila2(&thread_queue);
+			tcb_it = (TCB_t*) GetAtIteratorFila2(queue);
 
 			if(tcb_it->tid == tid)
 				return tcb_it;
 		}
-		while(NextFila2(&thread_queue) == 0);
+		while(NextFila2(queue) == 0);
 	}
 }
 
 void print_queue(PFILA2 queue) {
-	queue = &thread_queue;
 	PNODE2 it = queue->first;
 	while(it != NULL) {
 		TCB_t* tcb = (TCB_t*) it->node;
