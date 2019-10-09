@@ -66,7 +66,7 @@ int remove_from_queue(TCB_t* tcb, PFILA2 queue) {
 
 static TCB_t* get_next_thread() {
     TCB_t *tcb_it, *prospect_tcb = NULL;
-    unsigned int current_prio, highest_prio = UINT_MAX;
+    int current_prio, highest_prio = INT_MAX;
 	g_finished = TRUE;
 	
     int r = FirstFila2(&ready_queue);
@@ -109,7 +109,7 @@ void dispatch(TCB_t* tcb) {
 void schedule() {
     TCB_t* next_thread;
     volatile int sched_ready = 1;
-    unsigned int elapsed_time;
+    int elapsed_time;
 	
     while(1) {
         /* Selects the next thread to execute */
@@ -128,7 +128,7 @@ void schedule() {
                 /* Thread has returned to scheduler */
                 //printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
                 elapsed_time = stopTimer();
-                if (elapsed_time < 0) elapsed_time = UINT_MAX;
+                if (elapsed_time < 0) elapsed_time = INT_MAX;
                 next_thread->prio = elapsed_time;
 
                 /* Check state */
