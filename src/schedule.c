@@ -58,7 +58,7 @@ int remove_from_queue(TCB_t* tcb, PFILA2 queue) {
 				found = TRUE;
 				DeleteAtIteratorFila2(queue);
 			}
-		} while(!found && NextFila2(queue));
+		} while(!found && NextFila2(queue) == 0);
 	
 	if (!found) return -1;
 	return 0;
@@ -128,7 +128,7 @@ void schedule() {
                 /* Thread has returned to scheduler */
                 //printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
                 elapsed_time = stopTimer();
-                next_thread->prio = elapsed_time;
+                next_thread->prio = (unsigned int) elapsed_time;
 
                 /* Check state */
                 if(next_thread->state == PROCST_APTO) {
