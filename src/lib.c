@@ -324,7 +324,7 @@ int csignal(csem_t *sem) {
 				return -9;
 			}
 			TCB_t *tcb_it, *prospect_tcb = NULL;
-			int current_prio, highest_prio = INT_MAX; /* TODO: This constant could be safer */
+			int current_prio, highest_prio = INT_MAX - 1; /* TODO: This constant could be safer */
 			do {
             /* Select a thread from queue */
 				tcb_it = (TCB_t*) GetAtIteratorFila2(sem->fila);

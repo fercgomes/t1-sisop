@@ -66,7 +66,7 @@ int remove_from_queue(TCB_t* tcb, PFILA2 queue) {
 
 static TCB_t* get_next_thread() {
     TCB_t *tcb_it, *prospect_tcb = NULL;
-    int current_prio, highest_prio = INT_MAX;
+    int current_prio, highest_prio = INT_MAX - 1;
 	g_finished = TRUE;
 	
     int r = FirstFila2(&ready_queue);
