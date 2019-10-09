@@ -128,7 +128,8 @@ void schedule() {
                 /* Thread has returned to scheduler */
                 //printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
                 elapsed_time = stopTimer();
-                next_thread->prio = (unsigned int) elapsed_time;
+                if (elapsed_time < 0) elapsed_time = UINT_MAX;
+                next_thread->prio = elapsed_time;
 
                 /* Check state */
                 if(next_thread->state == PROCST_APTO) {
