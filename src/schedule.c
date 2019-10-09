@@ -128,7 +128,7 @@ void schedule() {
                 /* Thread has returned to scheduler */
                 //printf("+ [SCHEDULER] Returning from thread tid=%d\n", next_thread->tid);
                 elapsed_time = stopTimer();
-                if (elapsed_time < 0) elapsed_time = INT_MAX;
+                if (elapsed_time < 0) elapsed_time = INT_MAX - 1;
                 next_thread->prio = elapsed_time;
 
                 /* Check state */
